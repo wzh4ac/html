@@ -1,0 +1,160 @@
+﻿<!DOCTYPE HTML>
+<html>
+	<!--  wzh4ac@163.com  -->
+<head>
+	<script src="../javascript/jquery-1.4.3.js"></script>
+	
+	<style type="text/css">
+		body{color:#000000;}
+		#mainframe{position:absolute; top:5px; left:10px;}
+		#information{position:absolute; }
+		.polygon{position:absolute; overflow:hidden; pointer-events:none; }
+		.pol{overflow:hidden; pointer-events:none; }
+		.mine{height:100%; width:90%; text-align:center; vertical-align:middle; cursor:pointer; pointer-events:auto;}
+	</style>
+		
+	<script type="text/javascript">
+
+		var l = 25;
+		var x = 0;
+		var y = 0;
+		var minenum = 30;
+		var numColors=['#FFFFFF','#000000','#FFFF00','#00FF00','#804000','#0000FF','#FFC0CB'];//数字颜色
+		var pColor='#FFFFFF';
+		
+		var unkownnum = null;
+		var visible = 0;
+		
+		$(document).ready(function (){
+			x = parseInt((window.innerHeight||window.parent.window.innerHeight)*.6/l)|1;
+			y = parseInt((window.innerWidth||window.parent.window.innerWidth)*.45/l);
+			$('#information').css('left',(window.innerWidth||window.parent.window.innerWidth)*.82+20);
+			init();
+			setMine();
+		})
+		
+		function init(){
+			var t = parseInt(235/(x+y)-2);//色差(需int)
+			for (var i=0;i<x;i++){
+				for (var j=0;j<y-(i&1);j++){
+					var dd = $('<div></div>').addClass('mine').attr({'id':'mine_'+i+'_'+j,'mine':0,'tag':0,'p':0}).css({'line-height':l*2+'px','font-size':l*1+'px'});
+					dd.css({'background':'-webkit-linear-gradient(left top, #0000'+(255-(i+j)*t).toString(16)+', #2222'+(225-(i+j)*t).toString(16)+')'});
+					dd.css({'background':'-moz-linear-gradient(left top, #0000'+(255-(i+j)*t).toString(16)+', #2222'+(225-(i+j)*t).toString(16)+')'});
+					dd.css({'background':'-o-linear-gradient(left top, #0000'+(255-(i+j)*t).toString(16)+', #2222'+(225-(i+j)*t).toString(16)+')'});
+					var d4 = $('<div></div>').addClass('pol').css({height:l*2,width:l*3,transform:'rotate(90deg)'}).append(dd);
+					var d3 = $('<div></div>').addClass('pol').css({height:l*1.732,width:l*3,transform:'rotate(120deg)'}).append(d4);
+					var d2 = $('<div></div>').addClass('pol').css({height:l*1.732,width:l*3,transform:'rotate(120deg)'}).append(d3);
+					var d1 = $('<div></div>').addClass('polygon').css({left:j*l*1.8+l*0.9*(i&1),top:i*l*1.56,height:l*1.732,width:l*3,transform:'rotate(30deg)'}).append(d2);
+					$('#mainframe').append(d1);
+				}
+			}
+			$('.mine').bind('mousedown',mdown);
+			unkownnum = $('.mine').length;
+		}
+		
+		function setMine(){
+			if(isNaN($('#minenum').val())){
+				$('#error').text('非有效数字！');
+				return false;
+			}
+			minenum = Math.max(0,Math.min($('#minenum').val(),x*y/2));
+			for (var i=0;i<minenum;i++){
+				var ran = parseInt(Math.random()*x*y);
+				if ($('#mine_'+parseInt(ran/y)+'_'+(ran%y)).length && $('#mine_'+parseInt(ran/y)+'_'+(ran%y)).attr('mine')==0){
+					$('#mine_'+parseInt(ran/y)+'_'+(ran%y)).attr('mine',1);
+				}else{
+					i--;
+				}
+			}
+			visible = 1;
+		}
+
+		function reset(){
+			$('#mainframe').empty();
+			init();
+			setMine();
+		}
+		
+		function mdown(e){
+			if (visible){
+				if (e.button==0){
+					show($(this));
+				}
+				if (e.button==2){
+					p($(this));
+				}
+			}
+		}
+		
+		function show(obj){
+			if (obj.attr('tag')==0 && obj.attr('p')==0){
+				obj.attr('tag',1);
+				obj.css({'background':'#66B3FF'});
+				unkownnum--;
+				success();
+				if ($(obj).attr('mine')==1){
+					failure(obj);
+				}else{
+					var n = 0;
+					var i = parseInt(obj.attr('id').split('_')[1]);
+					var j = parseInt(obj.attr('id').split('_')[2]);
+					//周围6格
+					var objs = [$('#mine_'+(i)+'_'+(j-1)),$('#mine_'+(i)+'_'+(j+1)),$('#mine_'+(i-1)+'_'+(j-((i|1)-i))),$('#mine_'+(i-1)+'_'+(j+(i&1))),$('#mine_'+(i+1)+'_'+(j-((i|1)-i))),$('#mine_'+(i+1)+'_'+(j+(i&1)))];
+					for (var k = 0;k<6;k++){
+						n+= parseInt(objs[k].attr('mine'))||0;
+					}
+					if (n){
+						obj.html(n);
+					}else{
+						for (var k = 0;k<6;k++){
+							show(objs[k]);
+						}
+					}
+				}
+			}
+		}
+		
+		function p(obj){
+			if (obj.attr('p')==1){
+				obj.attr('p',0);
+				obj.css('color','').html('')
+			}else{
+				obj.attr('p',1);
+				obj.css('color',pColor).html('P');
+			}
+		}
+		
+		function success(){
+			if (unkownnum<=minenum){
+				visible = 0;
+				alert(true);
+			}
+		}
+		
+		function failure(obj){
+			$(obj).html('X');
+			visible = 0;
+			alert('false');
+		}
+		
+		document.oncontextmenu = function (){
+			return false;
+		}
+
+	</script>
+
+	</head>
+	<body>
+		<div id="container">
+			<div id="mainframe" >
+				
+			</div>
+			<div id="information">
+				<input type="text" id="minenum" value="30" size="1" />
+				<button onclick="reset()">重新开始</button>
+				<br><span id="error" style="color:red;"></span>
+				<span id="time"></span>
+			</div>
+		</div>
+	</body>
+</html>

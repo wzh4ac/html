@@ -1,0 +1,193 @@
+<html>
+<head>
+	<script src="../javascript/jquery-1.4.3.js"></script>
+	
+	<style type="text/css">
+		#arg{position:absolute; top:50px; left:50px; color:yellow;}
+		#container{position:absolute; -webkit-user-select:none;  top:100px; left:50px; }
+		#dpre{position:absolute; top:100px; left:60%; line-height:}
+		.c{position:absolute; text-align:center; }
+	</style> 
+	
+	<script type="text/javascript">
+		
+		var img = ''
+		var size = [450,600];
+		var row = 3; 
+		var col = 4; 
+		var height = 150;
+		var width = 150;
+		var time = 100;
+
+		var v = true;
+		var hide = null;
+
+		$(document).ready(function(){
+			set();
+		});
+
+		function init(){
+			height = (window.innerHeight||window.parent.window.innerHeight)/row/1.4;
+			width = (window.innerWidth||window.parent.window.innerWidth)/col/2;
+			$('#container').empty();
+			$('#image').val(img);
+			$('#pre').attr('src',img).css({height:height*row/2,width:width*col/2});
+			var div;
+			var ran = Math.random();
+			for (var i=0;i<row;i++){
+				for (j=0;j<col;j++){
+					div = $('#<div><div>').attr({
+						id:'d_'+i+'_'+j,
+						x:i,
+						y:j
+					}).addClass('c').css({
+						height:height,
+						width:width,
+						lineHeight:height+'px',
+						fontSize:height/2,
+						backgroundImage:'url('+img+')',
+						backgroundSize:col*width+'px '+row*height+'px',
+						backgroundPosition:(-j*width)+'px '+(-i*height)+'px'
+					}).bind('click',function(){
+						mclick(this);
+					});
+					$('#container').append(div);
+				}
+			}
+			hide = $('#d_'+(row-1)+'_'+(col-1)).hide();
+			for (var i=0;i<row*col*12;i++){
+				ranset(Math.random()*4);
+			}
+			var c = $('.c')
+			for (var i=0;i<c.length;i++){
+				$(c[i]).css({
+					top:$(c[i]).attr('x')*height,
+					left:$(c[i]).attr('y')*width
+				})
+			}
+			v = true;
+		}
+
+		function ranset(ran){
+			var r = [[-1,0],[1,0],[0,-1],[0,1]][parseInt(ran%4)];
+			var x = parseInt(hide.attr('x'));
+			var y = parseInt(hide.attr('y'));
+			var c = $('.c[x='+(x+r[0])+'][y='+(y+r[1])+']');
+			if (c.length){
+				c.attr({
+					x:x,
+					y:y
+				});
+				hide.attr({
+					x:x+r[0],
+					y:y+r[1]
+				});
+			}
+		}
+
+		function move(x, y){
+			$('.c[x='+x+'][y='+y+']').attr({
+				x:hide.attr('x'),
+				y:hide.attr('y')
+			}).animate({
+				top:hide.attr('x')*height,
+				left:hide.attr('y')*width
+			},time,function(){
+				complete();
+			});
+			hide.attr({
+				x:x,
+				y:y
+			}).css({
+				top:x*height,
+				left:y*width
+			});
+		}
+
+		function complete(){
+			var s = $('.c')
+			for (var i=0;i<s.length;i++){
+				if ( s[i].id.split('_')[1]!=$(s[i]).attr('x') || s[i].id.split('_')[2]!=$(s[i]).attr('y') ){
+					return false;
+				}
+			}
+			v = false;
+			hide.fadeIn(function(){
+				alert('complete');
+			});
+			return true;
+		}
+
+		function mclick(obj){
+			if(v){
+				var o = $(obj);
+				var s = $('#d_'+(row-1)+'_'+(col-1));
+				if ( Math.abs(o.attr('x')-s.attr('x')) + Math.abs(o.attr('y')-s.attr('y')) == 1 ){
+					move(o.attr('x'),o.attr('y'));
+				}
+			}
+		}
+
+		function kdown(){
+			if(event.keyCode==17){
+				var c = $('.c');
+				for (var i=0;i<c.length;i++){
+					$(c[i]).text(parseInt(c[i].id.split('_')[1])*col+parseInt(c[i].id.split('_')[2]));
+				}
+			}
+		}
+
+		function kup(){
+			var x = parseInt(hide.attr('x'));
+			var y = parseInt(hide.attr('y'));
+			switch (event.keyCode){
+				case 37:
+					mclick($('.c[x='+x+'][y='+(y+1)+']')[0]);
+				break;
+				case 38:
+					mclick($('.c[x='+(x+1)+'][y='+(y)+']')[0]);
+				break;
+				case 39:
+					mclick($('.c[x='+x+'][y='+(y-1)+']')[0]);
+				break;
+				case 40:
+					mclick($('.c[x='+(x-1)+'][y='+(y)+']')[0]);
+				break;
+			}
+			if(event.keyCode==17){
+				var c = $('.c');
+				for (var i=0;i<c.length;i++){
+					$(c[i]).text('');
+				}
+			}
+		}
+		
+		//没有验证,不要乱写数据
+		function set(){
+			row = $('#row').val();
+			col = $('#col').val();
+			height = size[0]/row;
+			width = size[1]/col;
+			img = $('#image').val();
+			img = img.replace(/\\/g,'/');
+			init();
+		}
+	
+	</script>
+
+	</head>
+	<body onkeyup="kup()" onkeydown="kdown()">
+		<div id="arg">
+			row=<input id="row" value="3" style="width:20px;"/>
+			col=<input id="col" value="4" style="width:20px;"/>
+			image=<input id="image" type="text" value="../image/puzzle.jpg" style="width:400px;"/>
+			<input type="button" value="go" onclick="set()"/>
+		</div>
+		<div id="container">
+			
+		</div>
+		<div id="dpre">
+			<img id="pre" src="" />
+		</div>
+	</body>
+</html>

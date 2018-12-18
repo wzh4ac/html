@@ -1,0 +1,129 @@
+﻿<!DOCTYPE HTML>
+<html>
+	<!--  wzh4ac@163.com  -->
+<head>
+	<script src="javascript/jquery-1.4.3.js"></script>
+
+	<style type="text/css">
+		*{margin:0px;}
+		body{position:absolute; width:100%; height:100%; background:black;}
+		#container {position:absolute; width:100%; height:100%;}
+		.title{position:absolute; background-size:cover; text-align:center; cursor:pointer; overflow:hidden; color:#FFFFFF}
+		.note{position:absolute; color:#FFFFFF; white-space:nowrap;}
+	</style>
+	
+	<script type="text/javascript">
+		
+		var active;
+		var screen_height = window.screen.availHeight;
+		var screen_width = window.screen.availWidth;
+		var title_height = 54;
+		var title_str_height = 20;
+		var title_width = 104;
+		var title_margin = 20;
+		var title_backgroundimage_over = '';
+		var title_backgroundimage_out = '';
+		
+		var tabs = [
+					{title:'labyrinth',frame:'html/labyrinth.html',image:'image/labyrinth.png',backgroundImage:'image/bg1.jpg'},
+					{title:'sort',frame:'html/sort.html',image:'image/sort.png',backgroundImage:'image/bg2.jpg'},
+					{title:'barrage',frame:'html/barrage.html',image:'image/barrage.png',backgroundImage:'image/bg3.jpg'},
+					{title:'mine',frame:'html/mine.html',image:'image/mine.png',backgroundImage:'image/bg7.jpg'},
+					{title:'function',frame:'html/function.html',image:'image/function.png',backgroundImage:'image/bg8.jpg'},
+					{title:'puzzle',frame:'html/puzzle.html',image:'image/puzzle.jpg',backgroundImage:'image/bg6.jpg'},
+					]
+		var notes = [
+					{text:'点击边缘可返回主界面↓'}
+					]
+
+		
+		$(document).ready(function(){
+			screen_height = document.body.clientHeight;
+			screen_width = document.body.clientWidth;
+			init();
+		});
+
+		function init(){
+			var div;
+			var img;
+			var iframe;
+			var p;
+			var temp;
+			for (var i=0;i<tabs.length;i++){
+				div = $('<div></div>').attr({
+					'id':'title_'+i,
+					'_left':i%(parseInt((screen_width-title_margin*2)/(title_margin+title_width)))*(title_margin+title_width)+title_margin,
+					'_top':parseInt(i/parseInt((screen_width-title_margin*2)/(title_margin+title_width)))*(title_margin+title_height+title_str_height)+title_margin,
+					'_height':title_height,
+					'_fontheight':title_str_height,
+					'_width':title_width,
+					'_backgroundImage':'url('+tabs[i].backgroundImage+')',
+					'_src':tabs[i].frame
+				}).addClass('title');
+				div.css({
+					'left':div.attr('_left')+'px',
+					'top':div.attr('_top')+'px',
+					'height':div.attr('_height'),
+					'width':div.attr('_width'),
+					'backgroundImage':div.attr('_backgroundImage')
+				});
+				img = $('<img></img>').attr('src',tabs[i].image).css({width:'100%',height:'100%'});
+				iframe = $('<iframe></iframe>').attr({id:'frame_'+i,'backgroundImage':div.attr('_backgroundImage')}).attr({frameborder:'0',scrolling:'no'}).css('display','none');
+				p = $('<p></p>').text(tabs[i].title).addClass('title').css({
+					'left':div.attr('_left')+'px',
+					'top':parseInt(div.attr('_top'))+title_height+'px',
+					'height':div.attr('_fontheight'),
+					'width':div.attr('_width'),
+				});
+				div.append(img).append(iframe);
+				div.bind({
+					'mouseover':function(){},
+					'mouseout':function(){},
+					'click':function(){
+						$(this).css({zIndex:10});
+						$(this).find('*').hide();
+						$(this).animate({top:title_margin,left:title_margin,width:screen_width-title_margin*2,height:screen_height-title_margin*2},500,function(){
+							if (!$(this).find('iframe').attr('src')){
+								$(this).find('iframe').attr({'src':$(this).attr('_src')});
+							}
+							$(this).find('iframe').css({width:'100%',height:'100%'}).fadeIn();
+							active = this;
+						});
+					}
+				});
+				$('#container').append(div);
+				$('#container').append(p);
+			}
+			div = $('<div></div>').addClass('note').html(notes[0].text).css({top:screen_height-50,left:screen_width-300});
+			$('#container').append(div);
+			$('#container').bind('click',function(){reset()})
+		}
+		
+		function reset(){
+			if (active){
+				var i = $(active).attr('id').split('_')[1];
+				$(active).find('*').fadeOut();
+				$(active).animate({
+					'left':$(active).attr('_left')+'px',
+					'top':$(active).attr('_top')+'px',
+					'height':$(active).attr('_height'),
+					'width':$(active).attr('_width')
+				},500,function(){
+					$(this).css({zIndex:''});
+					$($(this).children()[0]).show();
+					$($(this).children()[1]).show();
+				});
+				active = null;
+			}
+		}
+		
+		
+
+	</script>
+</head>
+<body>
+	<div id="container">
+		
+	</div>
+</body>
+</html>

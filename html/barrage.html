@@ -1,0 +1,190 @@
+﻿<!DOCTYPE HTML>
+<html>
+	<!--  wzh4ac@163.com  -->
+<head>
+	<script src="../javascript/jquery-1.4.3.js"></script>
+	
+	<style type="text/css">
+		body,#container,#information{margin:0px; padding:0px;}
+		body{color:#FFFFFF;}
+		#mainframe{position:absolute; overflow:hidden; }
+		#information{position:absolute; line-height:50px;}
+		.barrage{position:absolute; overflow:hidden; white-space:nowrap; font-size:30px; border-radius:8px;}
+	</style>
+		
+	<script type="text/javascript">
+		
+		var pi = Math.PI;
+		var height;
+		var width;
+		var time = 0;
+
+		var list = [];
+		var barrages = [];
+		var barrage;
+		var thread;
+		
+		$(document).ready(function(){
+			height = (window.innerHeight||window.parent.window.innerHeight);
+			width = (window.innerWidth||window.parent.window.innerWidth);
+			$('#mainframe').css({height:height,width:width});
+			$('#information').css('left',width-120);
+		});
+		
+		function init(){
+			list = [];
+			time = 0;
+			//添加弹幕[时,左,上,速,向,字,色]
+			for (var i=0;i<3;i++){
+				list.push([time,	width,	i*50+50,	5,	-pi,'方向wasd ↑↓←→',	'#FFFFFF']);
+			}
+			time+=3000;
+			for (var i=0;i<10;i++){
+				list.push([time,	width,	i*50+30,	5,	-pi,'hello world',	'#FFFFFF']);
+				time+=1000;
+			}
+			for (var i=0;i<10;i++){
+				list.push([time,	width,	540-i*50,	5,	-pi,'hello world',	'#FFFFFF']);
+				time+=1000;
+			}
+			for (var i=0;i<10;i++){
+				list.push([time,	width,	540-i*50,	5,	-pi,'彩色测试',	'#'+parseInt((Math.random()*16777216)).toString(16)]);
+				time+=1000;
+			}
+			for (var i=0;i<5;i++){
+				list.push([time,	i*100+100,	-30,	5,	pi/2,'下落测试',	'#'+parseInt((Math.random()*16777216)).toString(16)]);
+				time+=1000;
+			}
+			for (var i=0;i<5;i++){
+				list.push([time,	i*100+100,	height,	5,	-pi/2,'上升测试',	'#'+parseInt((Math.random()*16777216)).toString(16)]);
+				time+=1000;
+			}
+			for (var i=0;i<10;i++){
+				list.push([time,	-100,	i*50+30,	5,	0,'逆向弹幕',	'#'+parseInt((Math.random()*16777216)).toString(16)]);
+				time+=1000;
+			}
+			time+=5000;
+			for (var i=0;i<11;i++){
+				list.push([time,	width,	i*50,	5,	-pi,'前方高能反应!',	'#'+parseInt((Math.random()*16777216)).toString(16)]);
+			}
+			time+=4000;
+			for (var i=0;i<10;i++){
+				for (var j=0;j<9;j++){
+					if (i!=j){
+						list.push([time,	width,	j*60+30,	5,	-pi,'干死黄旭东',	'#'+parseInt((Math.random()*16777216)).toString(16)]);
+					}
+				}
+				time += 1600;
+			}
+			for (var i=0;i<10;i++){
+				for (var j=0;j<9;j++){
+					if (i!=j){
+						list.push([time,	width,	510-j*60,	5,	-pi,'干死黄旭东',	'#'+parseInt((Math.random()*16777216)).toString(16)]);
+					}
+				}
+				time += 1600;
+			}
+			time += 8000;
+			//单线螺旋
+			for (var i=0;i<40;i++){
+				list.push([time,	width/2-8,	height/2-8,	5,	(i*0.1+1/2)*pi,'<img style=\"border-radius:8px;\" src=\"../image/bar.png\"></img>',	'']);
+				time+=200;
+			}
+			time+=3000;
+			//漩涡
+			for (var i=0;i<20;i++){
+				for (var j=0;j<12;j++){
+					list.push([time,	width/2-8,	height/2-8,	5,	(j/6+i*0.04)*pi,'<img style=\"border-radius:8px;\" src=\"../image/bar.png\"></img>',	'']);
+				}
+				time+=300;
+			}
+			time+=5000;
+			//直线形
+			for (var i=0;i<15;i++){
+				for (var j=0;j<12;j++){
+					list.push([time,	width*i/20+192,	height*i/20+92,	5,	(j/6+i/5+1/2)*pi,'<img style=\"border-radius:8px;\" src=\"../image/bar.png\"></img>',	'']);
+				}
+				time+=300;
+			}
+			for (var i=0;i<15;i++){
+				for (var j=0;j<12;j++){
+					list.push([time,	width*i/20+192,	height-height*i/20-92,	5,	(j/6+i/5+1/2)*pi,'<img style=\"border-radius:8px;\" src=\"../image/bar.png\"></img>',	'']);
+				}
+				time+=300;
+			}
+			//
+			for (var i=0;i<20;i++){
+				var x = width*Math.random();
+				var y = height*Math.random();
+				for (var j=0;j<12;j++){
+					list.push([time,	x,		y,		5,		(j/6)*pi,'<img style=\"border-radius:8px;\" src=\"../image/bar.png\"></img>',	'']);
+				}
+				time+=300;
+			}
+			//随机
+			for (var i=0;i<list.length;i++){
+				addBarrage(list[i][0],list[i][1],list[i][2],list[i][3],list[i][4],list[i][5],list[i][6]);
+			}
+		}
+		
+		function addBarrage(time, left, top, speed, direction, html, color){
+			setTimeout(function(){
+				barrage = $('<span></span>').addClass('barrage').css({left:left,top:top,color:color}).attr({speed:speed,direction:direction}).html(html);
+				barrages.push([left, top, speed, direction]);
+				$('#mainframe').append(barrage);
+			},time);
+		}
+		
+		function run(){
+			thread = setInterval(
+				function (){
+					for (var i=0;i<barrages.length;i++){
+						barrages[i][0] += barrages[i][2]*Math.cos(barrages[i][3]);
+						barrages[i][1] += barrages[i][2]*Math.sin(barrages[i][3]);
+						$($('.barrage')[i]).css({left:barrages[i][0],top:barrages[i][1]});
+						if (barrages[i][0]>width||barrages[i][0]<-200||barrages[i][1]>height||barrages[i][1]<-120){
+							barrages.splice(i,1);
+							$($('.barrage')[i]).remove();
+						}
+						if (barrages.length==0){
+							stop();
+						}
+					}
+				},50
+			);
+		}
+		
+		function start(){
+			if (!thread){
+				init();
+				run();
+				$('#start').fadeOut();
+			}
+		}
+		
+		function stop(){
+			if (thread){
+				clearInterval(thread);
+				thread = 0;
+			}
+			$('#mainframe').empty();
+			$('#start').fadeIn();
+		}
+		
+	</script>
+
+	</head>
+	<body>
+		<div id="container">
+			<div id="mainframe">
+				
+			</div>
+			<div id="information">
+				<span id="">
+					<button id="start" onclick="start()">开始</button>
+				</span>
+				<br>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,144 @@
+﻿<html>
+	<!-- wzh4ac@163.com -->
+<head>
+	<script src="../javascript/jquery-1.4.3.js"></script>
+	
+	<style type="text/css">
+		#container{position:absolute; height:95%; width:95%;}
+		#mainframe{position:absolute; top:10px; left:20px;}
+		#canvas{position:absolute; border:1px solid white; overflow:hidden;}
+		#information{position:absolute; top:10px;}
+		.text{position:absolute; width:200px;}
+		.x{position:absolute; background:white; height:1px; left:0px; z-index:10;}
+		.y{position:absolute; background:white; width:1px; top:0px; z-index:10;}
+		.p{position:absolute; color:white;}
+	</style> 
+	
+	<script type="text/javascript">
+		
+		var height = 500;
+		var width = 1000;
+		var density = 500;
+		var minx = -10;
+		var maxx = 10;
+		var miny = -5;
+		var maxy = 5;
+		var sleep = 1;
+		var thread = null;
+
+		var x = 0;
+		var y = 0;
+		var f = ''
+		var y0 = 0;
+
+		var canvas;
+		var ctx;
+		var math = ['abs','acos','asin','atan','atan2','ceil','cos','exp','floor','log','max','min','pow','random','round','sin','sqrt','tan']
+
+		$(document).ready(function(){
+			height = (window.innerHeight||window.parent.window.innerHeight)*.9;
+			width = (window.innerWidth||window.parent.window.innerWidth)*.75;
+			for (var i=0;i<math.length;i++){
+				eval(math[i]+'=Math.'+math[i]);
+			}
+			e = Math.E;
+			pi = Math.PI;
+			ln = Math.log
+			init();
+		})
+
+		function init(){
+			canvas = document.getElementById('canvas');
+			canvas.height = height;
+			canvas.width = width;
+			ctx = canvas.getContext('2d');
+			$('#mainframe').append($('<div></div>').addClass('x').css({width:width+1,top:parseInt(canvas.height)/2}));
+			$('#mainframe').append($('<div></div>').addClass('y').css({height:height+1,left:parseInt(canvas.width)/2}));
+			$('#container').append($('<div></div>').addClass('p').css({top:2,left:0}).text(maxy));
+			$('#container').append($('<div></div>').addClass('p').css({top:height/2+2,left:0}).text(maxy/2+miny/2));
+			$('#container').append($('<div></div>').addClass('p').css({top:height+2,left:0}).text(miny));
+			$('#container').append($('<div></div>').addClass('p').css({top:height+18,left:width+16}).text(maxx));
+			$('#container').append($('<div></div>').addClass('p').css({top:height+18,left:width/2+16}).text(maxx/2+minx/2));
+			$('#container').append($('<div></div>').addClass('p').css({top:height+18,left:16}).text(minx));
+			$('#information').css('left',width+100);
+		}
+		
+		function run(){
+			if (x<=maxx){
+				eval(f);
+				y = y<miny*2+1?miny*2+1:y>maxy*2+1?maxy*2+1:y;	//处理越界bug,原因不明
+				if (Math.abs(y-y0)>maxy-miny || y==Infinity){
+					ctx.moveTo((x-minx)/(maxx-minx)*width,(maxy-y)/(maxy-miny)*height);
+				}else{
+					ctx.lineTo((x-minx)/(maxx-minx)*width,(maxy-y)/(maxy-miny)*height);
+				}
+				ctx.stroke();
+				x += (maxx-minx)/density;
+				y0 = y;
+			}else{
+				clearInterval(thread);
+				thread = null;
+				$('#mainframe').append($('<div></div>').addClass('text').css({top:(maxy-y)/(maxy-miny)*height-10,left:width+10}).text('y='+$('#function').val()));
+			}
+		}
+
+		function addfunction(){
+			if (thread==null){
+				x = minx;
+				f = 'y='+$('#function').val();
+				try{
+					eval(f);
+					y0 = y;
+					ctx.beginPath();
+					ctx.strokeStyle='#'+$('#color').val();
+					ctx.moveTo((x-minx)/(maxx-minx)*width,(maxy-y)/(maxy-miny)*height);
+					thread = setInterval(run,sleep);
+				}catch(e){
+					alert('无法识别函数');
+				}
+			}
+		}
+
+		function reset(){
+			clearInterval(thread);
+			thread = null;
+			$('.text').remove();
+			canvas.width = canvas.width;
+		}
+
+		function keyup(e){
+			if (e.keyCode==13){
+				addfunction();
+			}
+			if (e.keyCode==27){
+
+				reset();
+			}
+		}
+
+	</script>
+
+</head>
+<body>
+	<div id="container" >
+		<div id="mainframe">
+			<canvas id="canvas"></canvas>
+		</div>
+		<div id="information">
+			<table>
+			<tr>
+				<td style="color:yellow;">color</td>
+				<td><input id="color" value="FFFF00" size="15"/></td>
+			</tr>
+			<tr>
+				<td style="color:yellow;">function</td>
+				<td><input id="function" value="sin(x)/x" size="15" onkeyup="keyup(event)"/></td>
+			</tr>
+			<tr>
+				<td><button id="do" onclick="addfunction()">add</button></td>
+				<td><button id="reset" onclick="reset()">reset</button></td>
+			</tr>
+		</div>
+	</div>
+</body>
+</html>

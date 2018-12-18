@@ -1,0 +1,283 @@
+﻿<!DOCTYPE HTML>
+<html>
+	<!--  wzh4ac@163.com  -->
+<head>
+	<script src="../javascript/jquery-1.4.3.js"></script>
+
+	<style type="text/css">
+		body {color:#FFFFFF;}
+		#mainframe {position:absolute;}
+		#information {position:absolute; line-height:30px;}
+		.data {position:absolute; opacity:0.6; background:linear-gradient(top, #5c9a1f, #538c1b);}
+	</style>
+
+	<script type="text/javascript">
+
+		var wid = 5;
+		var len = 200;
+		var height = 600;
+		var width = 1000;
+		var data = [];
+		var data_bgcolor1 = '#FFFF00';
+		var data_bgcolor2 = '#66FF00';
+		var data_tagcolor = '#EE2200';
+
+		var ran;
+		var thread = 0;
+		var delay = 1;
+		var temp0;
+		var temp1;
+		var temp2;
+		var temp3;
+		var temp4;
+		var temp5;
+		var temp6;
+		var time;
+		var time_thread;
+		
+		$(document).ready(function(){
+			height = parseInt(window.innerHeight||window.parent.window.innerHeight)-30;
+			width = parseInt(window.innerWidth||window.parent.window.innerWidth)-250;
+			len = parseInt(width/wid);
+			$('#information').css('left',width+20);
+			init();
+		});
+		
+		function init(){
+			for (var i=0;i<len;i++){
+				ran = parseInt(Math.random()*height);
+				data[i] = $('<span></span>').attr({'id':'data_'+i,'tag':ran}).addClass('data').css({left:i*wid,top:height-ran,height:ran,width:wid});
+				setbgcolor(data[i]);
+				$('#mainframe').append(data[i]);
+			}
+			$('#mainframe').css({height:height,width:width});
+		}
+		
+		function reset(){
+			if (thread){
+				alert('正在执行!')
+			}else{
+				for (var i=0;i<len;i++){
+					ran = parseInt(Math.random()*height);
+					$('#data_'+i).attr({'tag':ran}).animate({top:height-ran,height:ran},null,function(){setbgcolor($(this))});
+				}
+			}
+		}
+		
+		function setbgcolor(obj){
+			if (obj){
+				var c1 = parseInt(data_bgcolor1.substr(1,2),16);
+				var c2 = parseInt(data_bgcolor2.substr(1,2),16);
+				var h = obj.attr('tag');
+				var from = parseInt((c1-c2)*h/height+c2).toString(16);
+				from = from.length==1?'0'+from:from;
+				from = '#'+from+data_bgcolor1.substr(3,4);
+				obj.css({'background':'-webkit-linear-gradient(top,'+from+','+data_bgcolor2+')'});
+				obj.css({'background':'-moz-linear-gradient(top,'+from+','+data_bgcolor2+')'});
+				obj.css({'background':'-o-linear-gradient(top,'+from+','+data_bgcolor2+')'});
+			}
+		}
+		
+		function stop(){
+			if (thread){
+				clearInterval(thread);
+				clearInterval(time_thread);
+				thread = 0;
+				time_thread = 0;
+			}
+		}
+		
+		function bubble(){
+			if (thread){
+				alert('正在执行!')
+			}else{
+				temp1 = len;
+				temp2 = 0;
+				timeBegin();
+				thread = setInterval(function(){
+					if (temp1>0){
+						if (temp2+1<temp1){
+							temp3 = parseInt($('#data_'+temp2).attr('tag'));
+							temp4 = parseInt($('#data_'+(temp2+1)).attr('tag'));
+							setbgcolor(temp5);
+							setbgcolor(temp6);
+							temp5 = $('#data_'+temp2);
+							temp6 = $('#data_'+(temp2+1));
+							temp5.css('background',data_tagcolor);
+							temp6.css('background',data_tagcolor);
+							$('#args').html('比较下标1：'+temp2+'<br>比较下标2：'+(temp2+1)+'<br>比较值1：'+temp3+'<br>比较值2：'+temp4)
+							if (temp3>temp4){
+								$('#data_'+temp2).attr('tag',temp4);
+								$('#data_'+(temp2+1)).attr('tag',temp3);
+								$('#data_'+temp2).css({top:height-temp4,height:temp4});
+								$('#data_'+(temp2+1)).css({top:height-temp3,height:temp3});
+							}
+							temp2++;
+						}else{
+							temp2 = 0;
+							temp1--;
+						}
+					}else{
+						clearInterval(thread);
+						timeEnd();
+						thread = 0;
+					}
+				},delay)
+			}
+		}
+		
+		function insertion(){
+			if (thread){
+				alert('正在执行!')
+			}else{
+				temp1 = 0;
+				temp2 = temp1+1;
+				timeBegin();
+				thread = setInterval(function(){
+					if (temp1<len){
+						if (temp2>0){
+							temp3 = parseInt($('#data_'+temp2).attr('tag'));
+							temp4 = parseInt($('#data_'+(temp2-1)).attr('tag'));
+							setbgcolor(temp5);
+							setbgcolor(temp6);
+							temp5 = $('#data_'+temp2);
+							temp6 = $('#data_'+(temp2-1));
+							temp5.css('background',data_tagcolor);
+							temp6.css('background',data_tagcolor);
+							$('#args').html('比较下标1：'+temp2+'<br>比较下标2：'+(temp2+1)+'<br>比较值1：'+temp3+'<br>比较值2：'+temp4)
+							if (temp3<temp4){
+								$('#data_'+temp2).attr('tag',temp4);
+								$('#data_'+(temp2-1)).attr('tag',temp3);
+								$('#data_'+temp2).css({top:height-temp4,height:temp4});
+								$('#data_'+(temp2-1)).css({top:height-temp3,height:temp3});
+							}else{
+								temp2=0;
+							}
+							temp2--;
+						}else{
+							temp1++;
+							temp2 = temp1+1;
+						}
+					}else{
+						clearInterval(thread);
+						timeEnd();
+						thread = 0;
+					}
+				},delay)
+			}
+		}
+		
+		
+		function quick(){
+			if (thread){
+				alert('正在执行!')
+			}else{
+				temp0 = [];
+				temp0.unshift([0,len-1,null,0,len-1,1]);
+				timeBegin();
+				thread = setInterval(quick_sort,delay);
+			}
+		}
+		
+		function quick_sort(){
+			if (temp0.length==0){
+				clearInterval(thread);
+				timeEnd();
+				thread = 0;
+				return;
+			}
+			var temp = temp0.shift();
+			var from = temp[0];
+			var to = temp[1];
+			var val = temp[2];
+			var i = temp[3];
+			var j = temp[4];
+			var k = temp[5];
+			if (to-from>0){
+				$('#args').html('寄存值：'+val+'<br>开始下标：'+from+'<br>结束下标：'+to+'<br>比对下标1：'+i+'<br>比对下标2：'+j+'<br>比对值1：'+data[i].attr('tag')+'<br>比对值2：'+data[j].attr('tag'))
+				val = val==null?parseInt(data[from].attr('tag')):val;
+				if(i<j){
+					setbgcolor(temp5);
+					setbgcolor(temp6);
+					temp5 = $('#data_'+i);
+					temp6 = $('#data_'+j);
+					temp5.css('background',data_tagcolor);
+					temp6.css('background',data_tagcolor);
+					if(k==1){
+						if (parseInt(data[j].attr('tag'))<val){
+							data[i].attr('tag',data[j].attr('tag'));
+							data[i].css({top:height-data[i].attr('tag'),height:data[i].attr('tag')});
+							temp0.unshift([from, to, val, i+1, j, 2]);
+						}else{
+							temp0.unshift([from, to, val, i, j-1, 1]);
+						}
+					}
+					if(k==2){
+						if (parseInt(data[i].attr('tag'))>val){
+							data[j].attr('tag',data[i].attr('tag'));
+							data[j].css({top:height-data[j].attr('tag'),height:data[j].attr('tag')});
+							temp0.unshift([from, to, val, i, j-1, 1]);
+						}else{
+							temp0.unshift([from, to, val, i+1, j, 2]);
+						}
+					}
+				}else{
+					data[i].attr('tag',val);
+					data[i].css({top:height-val,height:val});
+					temp0.unshift([i+1, to, null, i+1, to, 1]);
+					temp0.unshift([from, i-1, null, from, i-1, 1]);
+				}
+			}
+		}
+		
+		function timeBegin(){
+			time = new Date().getTime();
+			time_thread = setInterval(function (){
+				$('#time').text((new Date().getTime() - time)/1000);
+			},1)
+		}
+		
+		function timeEnd(){
+			clearInterval(time_thread);
+		}
+
+	</script>
+
+	</head>
+	<body>
+		<div id="container">
+			<div id="mainframe">
+
+			</div>
+			<div id="information">
+				<span id="">
+					<br>
+					<span id="time">0</span>
+					<br>
+					<br>
+					<button onclick="reset()">
+						重置
+					</button>
+					<button onclick="stop()">
+						停止
+					</button>
+					<br>
+					<br>
+					<button onclick="bubble()">
+						冒泡排序
+					</button>
+					<button onclick="insertion()">
+						插入排序
+					</button>
+					<button onclick="quick()">
+						快速排序
+					</button>
+					<br>
+					<br>
+					<span id="args"></span>
+				</span>
+				<br>
+			</div>
+		</div>
+	</body>
+</html>

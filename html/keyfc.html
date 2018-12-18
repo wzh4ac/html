@@ -1,0 +1,44 @@
+﻿<!DOCTYPE HTML>
+<html>
+	<!--  wzh4ac@163.com  -->
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<style type="text/css">
+		.text{width:90%; height:40%; background:transparent; color:#FFFF33;}
+	</style>
+	<script src="../javascript/jquery-1.4.3.js"></script>
+	<script>
+		
+		$(document).ready(function(){
+			var height = window.innerHeight||window.parent.window.innerHeight;
+			$('.text').css({height:height*0.4});
+		});
+
+		function code(action){
+			$.ajax({
+				type: "post",
+				url: "http://keyfc.net/bbs/tools/tudou.aspx",
+				data: {
+					'action': action,
+					'orignalMsg':$('#from').val().replace(/\s/g, "")
+				},
+				dataType: "text",
+				success: function (data) {
+					data = data.substring(28,data.indexOf(']]></Message></BUDDHIST>'));
+					$('#to').val(data);
+				},
+				error:function(data){
+					$('#to').val(data);
+				}
+			});
+		}
+	</script>
+
+	<textarea id="from" class="text"></textarea>
+	<br>
+	<button onclick="code('Encode')">加密</button>
+	<button onclick="code('Decode')">解密</button>
+	<br>
+	<textarea id="to" class="text" readonly></textarea>
+	<p id="help" style="color:#FFFF33;">将需要加/解密的文字输入上方的文本域，点击需要的功能，结果生成在下方的文本域</p>
+</html>

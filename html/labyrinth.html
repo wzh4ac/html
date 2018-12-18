@@ -1,0 +1,309 @@
+﻿<!DOCTYPE HTML>
+<html>
+	<!--  wzh4ac@163.com  -->
+<head>
+	<script src="../javascript/jquery-1.4.3.js"></script>
+	
+	<style type="text/css">
+		body{color:#FFFFFF;}
+		#mainframe{position:absolute; background-color:black; border:2px solid black;}
+		#information{position:absolute; }
+		.span_cell{position:absolute; overflow:hidden;}
+		.span_line{position:absolute; overflow:hidden; }
+		.player{position:absolute; overflow:hidden;}
+	</style>
+		
+	<script type="text/javascript">
+
+		var x ;
+		var y ;
+		var cell_height = 20;
+		var cell_width = 20;
+		var cell_color = '#EEAA22';
+		var border_color = '#000000';
+		var player_color = '#3377FF';
+		var path_color = '#FF5500';
+		
+		var cells = [];
+		var paths = [];
+		var player;
+		var p = [];
+		var line;
+		var initLock = 1;
+		var threadLock = 0;
+		var time;
+		var time_thread;
+		var from;
+		var to;
+
+		$(document).ready(function(){
+			x = parseInt((window.innerHeight||window.parent.window.innerHeight)/cell_height)-3;
+			y = parseInt((window.innerWidth||window.parent.window.innerWidth)*.75/cell_width);
+			$('#mainframe').css({height:cell_height*x,width:cell_width*y,backgroundColor:border_color});
+			$('#information').css('left',(window.innerWidth||window.parent.window.innerWidth)*.75+20);
+			init();
+			setPath(0,0);
+			setTime();
+		});
+
+		function init(){
+			for (var i=0;i<x;i++){
+				cells[i] = [];
+				for (var j=0;j<y;j++){
+					cells[i][j] = $('<span></span>').attr('id','cell_'+i+'_'+j).addClass('span_cell').css({top:cell_height*i+1,left:cell_width*j+1,width:cell_width-2,height:cell_height-2,backgroundColor:cell_color}).bind('mousedown',function(e){
+						if (e.button==0){
+							p[0] = parseInt(e.currentTarget.id.split('_')[1]);
+							p[1] = parseInt(e.currentTarget.id.split('_')[2]);
+							from = cells[p[0]][p[1]];
+							$('#player').css({top:p[0]*cell_height+2,left:p[1]*cell_width+2});
+						}else if(e.button==2){
+							to = cells[e.currentTarget.id.split('_')[1]][e.currentTarget.id.split('_')[2]];
+							findPath(from, to);
+						}
+					});
+					cells[i][j].x = i;
+					cells[i][j].y = j;
+					cells[i][j].tag = 0;
+					cells[i][j].links = [];
+					$('#mainframe').append(cells[i][j]);
+					line = $('<span></span>').attr('id','line_'+i+'_'+j+'_'+(i)+'_'+(j+1)).attr('tag',0).addClass('span_line').css({top:cell_height*i+1,left:cell_width*j+(cell_width-1),width:2,height:cell_height-2});
+					$('#mainframe').append(line);
+					line = $('<span></span>').attr('id','line_'+i+'_'+j+'_'+(i+1)+'_'+(j)).attr('tag',0).addClass('span_line').css({top:cell_height*i+(cell_height-1),left:cell_width*j+1,width:cell_width-2,height:2});
+					$('#mainframe').append(line);
+				}
+			}
+			line = $('<span></span>').attr('id','line_from').addClass('span_line').css({top:1,left:-2,width:4,height:cell_height-2,backgroundColor:cell_color});
+			$('#mainframe').append(line);
+			line = $('<span></span>').attr('id','line_to').addClass('span_line').css({top:x*cell_width-(cell_width-1),left:y*cell_height-2,width:4,height:cell_height-2,backgroundColor:cell_color});
+			$('#mainframe').append(line);
+			p = [0,0];
+			player = $('<span></span>').attr({id:'player',x:0,y:0}).addClass('player').css({zIndex:99,top:2,left:2,height:cell_height-4,width:cell_width-4,backgroundColor:player_color});
+			$('#mainframe').append(player);
+			from = cells[p[0]][p[1]];
+		}
+		
+		function reset(){
+			$('#mainframe').empty();
+			cells = [];
+			init();
+			initLock = 1;
+			setPath(0,0);
+			setTime();
+		}
+		
+		function setPath(a, b){
+			while(initLock){
+				cells[a][b].tag = 1;
+				var ran = parseInt(Math.random()*4);
+				switch (ran){
+					case 0:
+						if (a>0&&cells[a-1][b].tag==0){
+							link(a,b,a-1,b);
+							a=a-1;
+						}
+					break;
+					case 1:
+						if (a<x-1&&cells[a+1][b].tag==0){
+							link(a,b,a+1,b);
+							a=a+1;
+						}
+					break;
+					case 2:
+						if (b>0&&cells[a][b-1].tag==0){
+							link(a,b,a,b-1);
+							b=b-1;
+						}
+					break;
+					case 3:
+						if (b<y-1&&cells[a][b+1].tag==0){
+							link(a,b,a,b+1);
+							b=b+1;
+						}
+					break;
+				}
+				if (!canMove(a-1,b) && !canMove(a+1,b) && !canMove(a,b-1) && !canMove(a,b+1)){
+					var temp = getUnused();
+					if (temp){
+						setPath(temp[0], temp[1]);
+					}else{
+						initLock = 0;
+					}
+				}
+			}
+		}
+		
+		function findPath(from, to){
+			for (var i=0;i<x;i++){
+				for (var j=0;j<y;j++){
+					cells[i][j].css('backgroundColor',cell_color);
+					cells[i][j].tag = 0;
+					if ($('#line_'+i+'_'+j+'_'+(i+1)+'_'+j).attr('tag')==1){
+						$('#line_'+i+'_'+j+'_'+(i+1)+'_'+j).css('backgroundColor',cell_color);
+					}
+					if ($('#line_'+i+'_'+j+'_'+i+'_'+(j+1)).attr('tag')==1){
+						$('#line_'+i+'_'+j+'_'+i+'_'+(j+1)).css('backgroundColor',cell_color);
+					}
+				}
+			}
+			from.tag = 1;
+			paths = [[from]];
+			var begin_time = new Date().getTime();
+			while (true){
+				var path = paths.shift();
+				var cell = path[path.length-1];
+				if (cell.x==to.x && cell.y==to.y){
+					showPath(path);
+					$('#find').text('开始:['+from.x+','+from.y+'] 结束:['+to.x+','+to.y+'] 用时:'+(new Date().getTime()-begin_time)+'')
+					return;
+				}else{
+					for (var i=0;i<cell.links.length;i++){
+						if(cell.links[i].tag==0){
+							cell.links[i].tag=1;
+							var temp = path.slice(0);
+							temp.push(cell.links[i]);
+							paths.push(temp);
+						}
+					}
+				}	
+			}
+		}
+		
+		function showPath(path){
+			var text=''
+			for (var i=0;i<path.length-1;i++){
+				$('#cell_'+path[i].x+'_'+path[i].y).css('backgroundColor',path_color);
+				$('#line_'+Math.min(path[i].x,path[i+1].x)+'_'+Math.min(path[i].y,path[i+1].y)+'_'+Math.max(path[i].x,path[i+1].x)+'_'+Math.max(path[i].y,path[i+1].y)).css('backgroundColor',path_color);
+			}
+			$('#cell_'+path[i].x+'_'+path[i].y).css('backgroundColor',path_color);
+		}
+		
+		//2点连接
+		function link(x1, y1, x2, y2){
+			$('#line_'+Math.min(x1,x2)+'_'+Math.min(y1,y2)+'_'+Math.max(x1,x2)+'_'+Math.max(y1,y2)).attr('tag',1).css({backgroundColor:cell_color});
+			cells[x2][y2].tag = 1;
+			cells[x1][y1].links.push(cells[x2][y2]);
+			cells[x2][y2].links.push(cells[x1][y1]);
+		}
+		
+		//判断目标是否可用
+		function canMove(a, b){
+			if (a<0 || a>x-1 || b<0 || b>y-1){
+				return false;
+			}else if (cells[a][b].tag==1){
+				return false;
+			}else
+				return true;
+		}
+		
+		//随机获取一个邻近未使用块
+		function getUnused(){
+			var temp = [];
+			for (var i=0;i<x;i++){
+				for (var j=0;j<y;j++){
+					if (cells[i][j].tag==1 && (canMove(i-1,j)||canMove(i+1,j)||canMove(i,j-1)||canMove(i,j+1))){
+						temp.push([i,j]);
+					}
+				}
+			}
+			if (temp.length<x*y){
+				var r = parseInt(Math.random()*temp.length);
+				return temp[r];
+			}else{
+				return false;
+			}
+		}
+		
+		function move(keyCode){
+			if (threadLock==0){
+				switch(keyCode){
+					case 38:
+						if (p[0]>0 && $('#line_'+(p[0]-1)+'_'+(p[1])+'_'+(p[0])+'_'+(p[1])).attr('tag')==1){
+							threadLock = 1;
+							p[0]--;
+							$('#player').animate({top:p[0]*cell_height+2},100,function(){threadLock = 0})
+						}
+					break;			
+					case 40:
+						if (p[0]<x-1 && $('#line_'+(p[0])+'_'+(p[1])+'_'+(p[0]+1)+'_'+(p[1])).attr('tag')==1){
+							threadLock = 1;
+							p[0]++;
+							$('#player').animate({top:p[0]*cell_height+2},100,function(){threadLock = 0})
+						}
+					break;
+					case 37:
+						if (p[1]>0 && $('#line_'+(p[0])+'_'+(p[1]-1)+'_'+(p[0])+'_'+(p[1])).attr('tag')==1){
+							threadLock = 1;
+							p[1]--;
+							$('#player').animate({left:p[1]*cell_width+2},100,function(){threadLock = 0})
+						}
+					break;
+					case 39:
+						if (p[1]<y-1 && $('#line_'+(p[0])+'_'+(p[1])+'_'+(p[0])+'_'+(p[1]+1)).attr('tag')==1){
+							threadLock = 1;
+							p[1]++;
+							$('#player').animate({left:p[1]*cell_width+2},100,function(){threadLock = 0})
+						}
+					break;
+				}
+				from = cells[p[0]][p[1]];
+			}
+		}
+		
+		function setTime(){
+			time = new Date().getTime();
+			time_thread = setInterval(function (){
+				$('#time').text(parseInt((new Date().getTime() - time)/1000));
+			},1000)
+		}
+		
+		document.onkeydown=function(event){
+			var e = event || window.event || arguments.callee.caller.arguments[0];
+			if (e && e.keyCode){
+				switch (e.keyCode){
+					case 32:
+						p = [0,0];
+						$('#player').css({top:2,left:2});
+					break;
+					case 13:
+						findPath(cells[0][0],cells[x-1][y-1]);
+					break;
+					case 37:
+					case 38:
+					case 39:
+					case 40:
+						move(e.keyCode);
+					break;
+					default:
+						
+					break;
+				}
+			}
+		}; 
+		
+		document.oncontextmenu = function (){
+			return false;
+		}
+
+	</script>
+
+	</head>
+	<body>
+		<div id="container">
+			<div id="mainframe">
+				
+			</div>
+			<div id="information">
+				<span id="">
+					<button id="" onclick="reset()">重新生成</button>
+				</span>
+				<br>
+				<br>
+				<span id="time">0</span>
+				<br>
+				<span id=""> 移动:↑↓←→ &nbsp; 左:起点 &nbsp; 右:终点 &nbsp; </span>
+				<br>
+				<span id="find"></span>
+			</div>
+		</div>
+	</body>
+</html>
